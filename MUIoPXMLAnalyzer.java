@@ -3,6 +3,7 @@ package MU92E2InteroperabilityAnalyzer;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -10,6 +11,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 
 import java.io.File;
+//import java.io.FileNameExtensionFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileWriter;
@@ -17,17 +19,24 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//import java.io.File;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileSystemView;
+
 public class MUIoPXMLAnalyzer {
     
     //FileWriter fileWriter = null;;//new PrintWriter("filename.txt");
 	public File file;
 	public File dataFile[]=new File[25];
-    //public static String xmlDataFileName = "C:\\Users\\ysong\\workspace\\MUInteroperabilityAnalyzer\\src\\VizmaxMUPackets.xml";
-    //sv-test-iop.xml
-    public static String xmlDataFileName = "C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\src\\test1_004.xml";
-    //public static String xmlDataFileName = "C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\src\\sv-simulation.xml";
-    //public static String xmlDataFileName = "C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\src\\SiemensMUPackets.xml";
     
+    
+    public static String xmlDataFileName ="";
+    //"C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\test_004.xml";
+    //"C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\test_SV_Sim.xml";
+    //"C:\\Users\\ysong\\workspace\\MU92E2InteroperabilityAnalyzer\\test_002.xml";
+    
+    public static String xmlDataFileFullName ="";
     FileWriter fileWriter = null;//new PrintWriter("filename.txt");
     FileWriter dataFileWriter[] = new FileWriter[25];
     String svStreamID[]= new String[25];
@@ -46,7 +55,8 @@ public class MUIoPXMLAnalyzer {
 	boolean vLanStatus;	    
 	boolean vLanFieldStatus;
 	 	 
-	
+	boolean dstMacAddrStatus;	    
+	boolean dstMacAddrFieldStatus; 		
 	
 	public  MUIoPXMLAnalyzer(){
 		analyzerControl();
@@ -65,6 +75,39 @@ public class MUIoPXMLAnalyzer {
 	       //GetAllDataValue
 	        
 	        System.out.println("\nMU Interoperability Analyzing System\n");  
+	        // Display file choose
+			JFileChooser jfc = new JFileChooser();//FileSystemView.getFileSystemView().getHomeDirectory()
+			
+			FileNameExtensionFilter filter = new FileNameExtensionFilter(".xml","xml");
+			jfc.setFileFilter(filter); 
+			 //String currentDir = System.getProperty("user.dir");
+		     //System.out.println("Current dir using System:" +currentDir);		
+		        
+		        File workingDirectory = new File(System.getProperty("user.dir"));
+		        jfc.setCurrentDirectory(workingDirectory);		 
+		        System.out.println("Current dir using System:" +workingDirectory);	
+		        
+			//jfc.setCurrentDirectory(currentDir);
+			jfc.setDialogTitle("Choose an IEC 61850-9-2 SV packet data file in XML:");
+			int returnValue = jfc.showOpenDialog(null);
+			// int returnValue = jfc.showSaveDialog(null);
+	        
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
+				File selectedFile = jfc.getSelectedFile();
+				xmlDataFileName=selectedFile.getName();
+				System.out.println("File Name: "+xmlDataFileName);
+				
+				xmlDataFileFullName = selectedFile.getAbsolutePath();
+				System.out.println("File Full Path Name: " +xmlDataFileFullName);
+				
+				
+				xmlDataFileName = xmlDataFileFullName.replace("\\","\\\\");
+				
+				System.out.println("File full name: "+ xmlDataFileName);
+				
+			}	        
+	        
+	        
 	        System.out.println("\nTest Cases:");
 	        System.out.println("0: Exit Testing!!!");
 	        System.out.println("1: SendMSVMessageTestCase");
@@ -81,8 +124,14 @@ public class MUIoPXMLAnalyzer {
 	        
 	        boolean iopAnalysisResult=false;
 	        
+
+			
 			  while(true)
 			  {
+				  
+
+
+				  
 			        Scanner keyboard = new Scanner(System.in);		
 			        System.out.println("\nPlease enter test case No.:");
 			        int testCaseNo = keyboard.nextInt();	        
@@ -270,6 +319,9 @@ public class MUIoPXMLAnalyzer {
 
   							 vLanStatus=true;	    
   							 vLanFieldStatus=true;
+  							 
+ 							 dstMacAddrStatus=true;	    
+ 							 dstMacAddrFieldStatus=true; 							 
   							 									  			        		
 		  			        		if(protoList.getLength()>0)
 		  			        		{
@@ -287,7 +339,7 @@ public class MUIoPXMLAnalyzer {
 
 					  						      
 					  			                    //System.out.println("\n********************SV Message Analyzer:***************************************");
-					  			                    //fileWriter.write("\n********************SV Message Analyzer:***************************************\n");
+					  			                    //fileWriter.write("\n********************SV Message Analysis:***************************************\n");
 
 
 					  						      // Ethernet type: Ethernet II, 					  							 	 						  							 
@@ -299,7 +351,7 @@ public class MUIoPXMLAnalyzer {
 							  			                String etherType="";
 							  			                
 						  			                    System.out.println("\n********SV Message Analyzer:**********");
-						  			                    fileWriter.write("\n**********SV Message Analyzer:*********\n");
+						  			                    fileWriter.write("\n**********SV Message Analysis:*********\n");
 
 							  			                
 								  			  			for (int temp = 0; temp < nList.getLength(); temp++) 
@@ -324,17 +376,17 @@ public class MUIoPXMLAnalyzer {
 									  	                 			if(destMACAddress.startsWith("01:0c:cd:04") )
 										  			                 {
 										  			                	 System.out.println("DestMACAddress=: true");
-										  			                	 ethLanFieldStatus=true;
-										  			                	 fileWriter.write("\n ethLanFieldStatus:"+ethLanFieldStatus);	                	 
-										  			                	 ethLanStatus = ethLanStatus && ethLanFieldStatus ;
-										  			                	 fileWriter.write("\n ethLanStatus:"+ethLanStatus+"\n");
+										  			                	 dstMacAddrFieldStatus=true;
+										  			                	 fileWriter.write("\n dstMacAddrFieldStatus:"+dstMacAddrFieldStatus);	                	 
+										  			                	 dstMacAddrStatus = dstMacAddrFieldStatus && dstMacAddrStatus ;
+										  			                	 fileWriter.write("\n dstMacAddrStatus:"+dstMacAddrStatus+"\n");
 										  			                 }else
 										  			                 {
 										  			                	System.out.println("DestMACAddress=: false");
-										  			                	ethLanFieldStatus = false;	
-										  			                	fileWriter.write("\n ethLanFieldStatus:"+ethLanFieldStatus);		  			                	
-										  			                	ethLanStatus = ethLanStatus && ethLanFieldStatus;
-										  			                	fileWriter.write("\n ethLanStatus:"+ethLanStatus+"\n");
+										  			                	dstMacAddrFieldStatus = false;	
+										  			                	fileWriter.write("\n dstMacAddrFieldStatus:"+dstMacAddrFieldStatus);		  			                	
+										  			                	dstMacAddrStatus = dstMacAddrStatus && dstMacAddrFieldStatus;
+										  			                	fileWriter.write("\n dstMacAddrStatus:"+dstMacAddrStatus+"\n");
 										  			                 }
 									  	                 			break;
 									  	                 		}
@@ -351,14 +403,14 @@ public class MUIoPXMLAnalyzer {
 										  			                	 ethLanFieldStatus=true;
 										  			                	 fileWriter.write(" ethLanFieldStatus: "+ethLanFieldStatus);										  			                	 
 										  			                	 ethLanStatus = ethLanStatus && ethLanFieldStatus;
-										  			                	 fileWriter.write("\n ethLanStatus=: "+ethLanStatus+"\n");
+										  			                	 fileWriter.write("\n ethLanStatus=: "+ethLanStatus+"\n\n");
 										  			                 } else
 										  			                 {
 										  			                	System.out.println(" EtherType=: false");
 										  			                	ethLanFieldStatus= false;
 										  			                	fileWriter.write(" ethLanFieldStatus: "+ ethLanFieldStatus);	
 										  			                	ethLanStatus = ethLanStatus && ethLanFieldStatus;
-										  			                	fileWriter.write("\n ethLanStatus:" +ethLanStatus+"\n");
+										  			                	fileWriter.write("\n ethLanStatus:" +ethLanStatus+"\n\n");
 										  			                 }
 									  	                 			
 									  	                 			/*
@@ -462,7 +514,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	 vLanFieldStatus=true;
 										  			                	 fileWriter.write("\n vLanFieldStatus: "+ vLanFieldStatus);
 										  			                	 vLanStatus = vLanStatus && vLanFieldStatus;					  			                	 
-										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n");
+										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n\n");
 										  			                 }else
 										  			                 {
 										  			                	System.out.println("vlanPriority=: false");
@@ -470,7 +522,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	vLanFieldStatus= false;
 										  			                	fileWriter.write("\n vLanFieldStatus: "+ vLanFieldStatus);
 										  			                	vLanStatus = vLanStatus && vLanFieldStatus;										  			                	
-										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n");
+										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n\n");
 										  			                 }
 									  	                 			break;
 									  	                 		}
@@ -520,7 +572,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	 vLanFieldStatus=true;
 										  			                	 fileWriter.write("\n vLanFieldStatus: "+ vLanFieldStatus);
 										  			                	 vLanStatus = vLanStatus && vLanFieldStatus;										  			                	 
-										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n");
+										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n\n");
 										  			                 }else
 										  			                 {
 										  			                	System.out.println("vlanDEI=: false");
@@ -528,7 +580,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	vLanFieldStatus= false;
 										  			                	fileWriter.write("\n fieldStatus: "+ vLanFieldStatus);
 										  			                	vLanStatus = vLanStatus && vLanFieldStatus;										  			                	
-										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n");
+										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n\n");
 										  			                 }
 									  	                 			break;
 									  	                 		}									  	                 		
@@ -551,7 +603,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	 vLanFieldStatus=true;
 										  			                	 fileWriter.write("\n vLanFieldStatus: "+ vLanFieldStatus);
 										  			                	 vLanStatus = vLanStatus && vLanFieldStatus;										  			                	 
-										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n");
+										  			                	 fileWriter.write("\n vLanStatus: "+ vLanStatus+"\n\n");
 										  			                 }else
 										  			                 {
 										  			                	System.out.println("vlanID=: false");
@@ -559,7 +611,7 @@ public class MUIoPXMLAnalyzer {
 										  			                	vLanFieldStatus= false;
 										  			                	fileWriter.write("\n vLanFieldStatus: "+ vLanFieldStatus);
 										  			                	vLanStatus = vLanStatus && vLanFieldStatus;										  			                	
-										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n");
+										  			                	fileWriter.write("\n vLanStatus: "+vLanStatus+"\n\n");
 										  			                 }
 									  	                 			break;
 									  	                 		}			
@@ -577,14 +629,14 @@ public class MUIoPXMLAnalyzer {
 										  			                	 vLanFieldStatus=true;
 										  			                	 fileWriter.write("vLanFieldStatus: "+vLanFieldStatus);										  			                	 
 										  			                	 ethLanStatus = ethLanStatus && vLanFieldStatus;
-										  			                	 fileWriter.write("\n vLanStatus=: "+vLanStatus+"\n");
+										  			                	 fileWriter.write("\n vLanStatus=: "+vLanStatus+"\n\n");
 										  			                 }else
 										  			                 {
 										  			                	System.out.println(" VLanType=: false");
 										  			                	ethLanFieldStatus= false;
 										  			                	fileWriter.write(" vLanFieldStatus: "+ vLanFieldStatus);	
 										  			                	ethLanStatus = vLanStatus && vLanFieldStatus;
-										  			                	fileWriter.write("\n VLanStatus:" +vLanStatus+"\n");
+										  			                	fileWriter.write("\n VLanStatus:" +vLanStatus+"\n\n");
 										  			                 }
 									  	                 			break;
 									  	                 		}
@@ -605,11 +657,11 @@ public class MUIoPXMLAnalyzer {
 								  			                System.out.println("show name:="+eElement.getAttribute("showname"));   
 										  			      	System.out.println(" IEC 61850-9-2 SV Packet Counter=:"+svPacketCounter);
 										  			      	
-										  			        fileWriter.write("\n IEC 61850-9-2 SV Packet Counter=:"+svPacketCounter+"\n");
+										  			        //fileWriter.write("\n IEC 61850-9-2 SV Packet Counter=:"+svPacketCounter+"\n");
 
 
 								  			                	System.out.println("Initial position of SV message: " + eElement.getAttribute("pos") );
-								  			                	fileWriter.write("\n Initial position of SV message: " + eElement.getAttribute("pos") +"\n");
+								  			                	//fileWriter.write("\n Initial position of SV message: " + eElement.getAttribute("pos") +"\n");
 								  			                	
 
 								  			      	    try{
@@ -625,14 +677,14 @@ public class MUIoPXMLAnalyzer {
 								  			                	
 								  			                status = parserAndAnalysisMultipleSVMessageFields(nList);
 								  			                
-								  			                fileWriter.write("\n status=:"+status+"\n");		
-								  			                fileWriter.write("\n vLanStatus=:"+vLanStatus+"\n");	
-								  			                fileWriter.write("\n ethLanStatus=:"+ethLanStatus+"\n");	
+								  			                fileWriter.write("\n status=:"+status);		
+								  			                fileWriter.write("\n vLanStatus=:"+vLanStatus);	
+								  			                fileWriter.write("\n ethLanStatus=:"+ethLanStatus+"\n\n");	
 								  			                
 								  			                status = status && vLanStatus && ethLanStatus;
 								  			                
 								  			                System.out.println("MU SV Message Analysis Result:=:"+status);
-								  			                fileWriter.write("\n\n MU SV Message Analysis Result:=:"+status+"\n");								  			                	
+								  			                fileWriter.write("\n\n MU SV Message Analysis Result:=:"+status+"\n\n");								  			                	
 								  			                
 		
 								  				        }catch(NullPointerException e){
@@ -1606,8 +1658,8 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
                 int positionInt=0;
                 String positionStr="";
                 
-                int sizeInt=0;
-                String sizeStr="";	      
+                int lengthInt=0;
+                String lengthStr="";	      
                 
         		int numOfASDU=0;  //   numOfASDu= 8
         		int svIDlength=0; //   10<= svIDLength <=34
@@ -1628,7 +1680,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                 System.out.println("No. of Filed in Header frame: "+temp);
 	                 System.out.println("Field Name=:"+element.getAttribute("name"));                           
 	                 System.out.println("showname=:"+element.getAttribute("showname"));  
-	                 System.out.println("size=:"+element.getAttribute("size"));      
+	                 System.out.println("length=:"+element.getAttribute("length"));      
 	                 System.out.println("pos=:"+element.getAttribute("pos"));  
 	                 System.out.println("show=:"+element.getAttribute("show"));      
 	                 System.out.println("value=:"+element.getAttribute("value"));                      
@@ -1661,11 +1713,11 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  		
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"2";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"2";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			
-		              	  			System.out.println("Size=:"+sizeStr);	
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");			              	  			
+		              	  			System.out.println("length=:"+lengthStr);	
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");			              	  			
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");			              	  			
 		              	  			
 		              	  			
@@ -1680,31 +1732,31 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    fileWriter.write(" sv.appid: "+"true"+"\n");
 	                                    System.out.println("sv.appid: "+"true");      
 	                                    //System.out.println("sv.appid: "+element.getAttribute("name"));     
-	                                    System.out.println("appId: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" appId: "+element.getAttribute("value")+"\n");    
+	                                    System.out.println("sv.appId: "+element.getAttribute("value"));   
+	                                    //fileWriter.write(" sv.appId: "+element.getAttribute("value")+"\n");    
 	                                    fieldStatus=true;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
 	                                    fileWriter.write(" sv.appid: "+"false"+"\n");
 	                                    System.out.println("sv.appid: "+"false");     
 	                                    //System.out.println("sv.appid: "+element.getAttribute("name"));         
-	                                    System.out.println("appId: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" appId: "+element.getAttribute("value")+"\n");     
+	                                    System.out.println("sv.appId: "+element.getAttribute("value"));   
+	                                    //fileWriter.write(" sv.appId: "+element.getAttribute("value")+"\n");     
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;	 
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }                                      
 
-                	  			positionInt = posInt+sizeInt;
+                	  			positionInt = posInt+lengthInt;
                 	  			positionStr = Integer.toString(positionInt);
                 	  			System.out.println("\nNext position=:"+positionStr);
                 	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  
@@ -1717,13 +1769,13 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"16";
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"2";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"2";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);	 
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+		              	  			System.out.println("length=:"+lengthStr);	 
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 		              	  			int lengthDec= Integer.parseInt(element.getAttribute("value"), 16);
 		              	  			
@@ -1734,7 +1786,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.length: "+"true");       
 	                                    //System.out.println("sv.length: "+element.getAttribute("name"));
 	                                    System.out.println("sv.length: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" sv.length: "+element.getAttribute("show")+"\n");   
+	                                    //fileWriter.write(" sv.length: "+element.getAttribute("show")+"\n");   
                                         svLength= Integer.parseInt(element.getAttribute("value"),16); // hex string to int
                                         System.out.println("svLength=:"+svLength);	                                    
 	                                    fieldStatus=true;
@@ -1742,7 +1794,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;    
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -1750,20 +1802,21 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.length: "+"false");            
 	                                    //System.out.println("sv.length: "+element.getAttribute("name"));    
 	                                    System.out.println("sv.length: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" sv.length: "+element.getAttribute("show")+"\n");       
+	                                    //fileWriter.write(" sv.length: "+element.getAttribute("show")+"\n");       
 	                                    fieldStatus= false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);	
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }  
 	                 			
-                	  			positionInt = posInt+sizeInt;
+                	  			positionInt = posInt+lengthInt;
                 	  			positionStr = Integer.toString(positionInt);	   
                 	  			System.out.println("\nNext position=:"+positionStr);                    	  			
                 	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                  	  			
 	                                break;
+	                                
 	                       // case 2:  nameOfField = "sv.reserve1"; //0x4000 to 0x7FFF 
 	                 		case "sv.reserve1":  
              						fileWriter.write(" Tag=:"+nameOfField+"\n");	                 			
@@ -1771,15 +1824,15 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"18";
 		              	  			posInt=Integer.parseInt(posStr);
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"2";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"2";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			
 		              	  			int reserved1= Integer.parseInt(element.getAttribute("value"));
 		              	  			
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);		                    	  
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+		              	  			System.out.println("length=:"+lengthStr);		                    	  
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 		              	  			
 		              	  			
@@ -1793,7 +1846,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //System.out.println("sv.reserve1: "+element.getAttribute("name"));  
 	                                    System.out.println("sv.reserve1: "+element.getAttribute("value"));   
 	                                    
-	                                    fileWriter.write(" sv.reserve1: "+element.getAttribute("value")+"\n");    
+	                                   // fileWriter.write(" sv.reserve1: "+element.getAttribute("value")+"\n");    
 	                                    //fileWriter.write(" positionStr=: "+positionStr);
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
 	                                    
@@ -1802,7 +1855,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -1810,7 +1863,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.reserve1: "+"false");     
 	                                    //System.out.println("sv.reserve1: "+element.getAttribute("name"));       
 	                                    System.out.println("sv.reserve1: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.reserve1: "+element.getAttribute("value")+"\n");   
+	                                    //fileWriter.write(" sv.reserve1: "+element.getAttribute("value")+"\n");   
 	                                   // fileWriter.write(" positionStr=: "+positionStr);	 
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
 	                                    
@@ -1819,10 +1872,10 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status);  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }   
 	                 			
-                	  			positionInt = posInt+sizeInt;
+                	  			positionInt = posInt+lengthInt;
                 	  			positionStr = Integer.toString(positionInt);
                 	  			System.out.println("\nNext position=:"+positionStr);                  	  			
                 	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                  	  				                 			
@@ -1835,12 +1888,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"20";
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"2";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"2";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");		                 			
+		              	  			System.out.println("length=:"+lengthStr);
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");		                 			
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 		              	  			
 	                              // if(element.getAttribute("name").equals("sv.reserve2") && element.getAttribute("size").equals("2") && element.getAttribute("pos").equals("20") )
@@ -1850,7 +1903,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.reserve2: "+"true");    
 	                                    //System.out.println("sv.reserve2: "+element.getAttribute("name"));     
 	                                    System.out.println("sv.reserve2: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.reserve2: "+element.getAttribute("value")+"\n");   
+	                                    //fileWriter.write(" sv.reserve2: "+element.getAttribute("value")+"\n");   
 	                                    
 	                                   // fileWriter.write(" positionStr=: "+positionStr);	 
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
@@ -1860,7 +1913,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;  	  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -1868,7 +1921,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.reserve2: "+"false");     
 	                                   // System.out.println("sv.reserve2: "+element.getAttribute("name"));     
 	                                    System.out.println("sv.reserve2: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.reserve2: "+element.getAttribute("value")+"\n");   
+	                                    //fileWriter.write(" sv.reserve2: "+element.getAttribute("value")+"\n");   
 	                                    
 	                                   // fileWriter.write(" positionStr=: "+positionStr);	 
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
@@ -1878,9 +1931,9 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);;
 	                                    System.out.println("status=:"+status);;  	  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }      
-	                	  			positionInt = posInt+sizeInt+2;
+	                	  			positionInt = posInt+lengthInt+2;
 	                	  			positionStr = Integer.toString(positionInt);			                    	  		
 	                	  			System.out.println("\nNext position=:"+positionStr);               	  			
                     	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                	  			               			
@@ -1893,12 +1946,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"26", not 24; ?????
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"99";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"99";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);	
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+		              	  			System.out.println("length=:"+lengthStr);	
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 		              	  			
 	                 			//element.getAttribute("showname").equals("savPdu") &&
@@ -1910,7 +1963,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.savPdu_element: "+"true");         
 	                                    //System.out.println("sv.savPdu_element: "+element.getAttribute("name"));     
 	                                    System.out.println("sv.savPdu_element: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.savPdu_element: "+element.getAttribute("value")+"\n");   
+	                                    //fileWriter.write(" sv.savPdu_element: "+element.getAttribute("value")+"\n");   
 	                                   //fileWriter.write(" positionStr=:"+positionStr+"\n");
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
 	                                    		
@@ -1919,7 +1972,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status); 	  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -1927,7 +1980,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.savPdu_element: "+"false");         
 	                                    //System.out.println("sv.savPdu_element: "+element.getAttribute("name"));   
 	                                    System.out.println("sv.savPdu_element: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.savPdu_element: "+element.getAttribute("value")+"\n"); 
+	                                    //fileWriter.write(" sv.savPdu_element: "+element.getAttribute("value")+"\n"); 
 	                                    //fileWriter.write(" positionStr=: "+positionStr+"\n");	   
 	                                    //fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
 	                                    
@@ -1936,7 +1989,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status); 	    
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               } 
 	                	  			positionInt = posInt+2;
 	                	  			positionStr = Integer.toString(positionInt);	
@@ -1951,12 +2004,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"28", not 26;??????
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"1";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"1";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);	   
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	      	  				                 			
+			              	  			System.out.println("length=:"+lengthStr);	   
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	      	  				                 			
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  			
 			              	  			if(element.getAttribute("show").equals("8")){
@@ -1977,7 +2030,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println(" sv.noASDU: "+"true");     
 	                                    //System.out.println("sv.noASDU: "+element.getAttribute("name"));      
 	                                    System.out.println("sv.noASDU: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.noASDU: "+element.getAttribute("show")+"\n");   
+	                                    //fileWriter.write(" sv.noASDU: "+element.getAttribute("show")+"\n");   
                                         numOfASDU= Integer.parseInt(element.getAttribute("show"));
                                         System.out.println("numOfASDU=:"+numOfASDU);                      
 	                                    fieldStatus=true;
@@ -1985,7 +2038,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status);  	
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -1993,15 +2046,15 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.noASDU: "+"false");           
 	                                    //System.out.println("sv.noASDU: "+element.getAttribute("name"));      
 	                                    System.out.println("sv.noASDU: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" sv.noASDU: "+element.getAttribute("show")+"\n");      
+	                                    //fileWriter.write(" sv.noASDU: "+element.getAttribute("show")+"\n");      
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status); 	   
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }   
-	                	  			positionInt = posInt+sizeInt+2; ///???? 4, not 2 
+	                	  			positionInt = posInt+lengthInt+2; ///???? 4, not 2 
 	                	  			positionStr = Integer.toString(positionInt);	
 	                	  			System.out.println("\nNext position=:"+positionStr);                 	  			
                     	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                	  			                			
@@ -2014,12 +2067,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"33"; not "29"
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"94";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"94";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);		                    	  
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+		              	  			System.out.println("length=:"+lengthStr);		                    	  
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 		              	  			fileWriter.write(" value=:"+element.getAttribute("show")+"\n");		
 		              	  			
 		              	  			
@@ -2030,13 +2083,13 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.seqASDU: "+"true");      
 	                                    //System.out.println("sv.seqASDU: "+element.getAttribute("name"));    
 	                                    System.out.println("sv.seqASDU "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.seqASDU: "+element.getAttribute("value")+"\n");     
+	                                    //fileWriter.write(" sv.seqASDU: "+element.getAttribute("value")+"\n");     
 	                                    fieldStatus=true;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status);	               
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -2044,13 +2097,13 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.seqASDU: "+"false");    
 	                                    //System.out.println("synphasor.timeqal: "+element.getAttribute("name"));    
 	                                    System.out.println("sv.seqASDU: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" sv.seqASDU: "+element.getAttribute("value")+"\n");     
+	                                    //fileWriter.write(" sv.seqASDU: "+element.getAttribute("value")+"\n");     
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    System.out.println("status=:"+status); 	    
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }     
                 	  			positionInt = posInt+0;
                 	  			positionStr = Integer.toString(positionInt);	
@@ -2068,12 +2121,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"29";
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"94";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"94";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);		                    	  
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	                    	  	                       			
+		              	  			System.out.println("length=:"+lengthStr);		                    	  
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	                    	  	                       			
 
 		               	  			System.out.println("svIDCounter(256):="+svIDCounter);
 		               	  			fileWriter.write(" svIDCounter=:"+svIDCounter+"\n");
@@ -2092,7 +2145,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.ASDU_element: "+"true");    
 	                                    //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));        
 	                                    System.out.println("ASDU_element: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" ASDU_element: "+element.getAttribute("value")+"\n");  
+	                                    //fileWriter.write(" ASDU_element: "+element.getAttribute("value")+"\n");  
 	                                    
 	                                   // fileWriter.write(" positionStr=: "+positionStr);	 
 	                                   // fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");
@@ -2103,7 +2156,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status); 	    
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               }
 	                               else
 	                               {
@@ -2111,7 +2164,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    System.out.println("sv.ASDU_element: "+"false");             
 	                                    //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));      
 	                                    System.out.println("ASDU_element: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" ASDU_element: "+element.getAttribute("value")+"\n");   
+	                                    //fileWriter.write(" ASDU_element: "+element.getAttribute("value")+"\n");   
 	                                    
 	                                    //fileWriter.write("positionStr=: "+positionStr);	 
 	                                    //fileWriter.write(" posStr=: "+element.getAttribute("pos")+"\n");	                                    
@@ -2122,7 +2175,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);	  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                               } 
                                     
                 	  			positionInt = posInt+4;//29+4=33
@@ -2142,13 +2195,13 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	              	  			posStr=element.getAttribute("pos");//"33";
 	              	  			posInt=Integer.parseInt(posStr);	
 	              	  			
-	              	  			sizeStr=element.getAttribute("size");//"11 for Vizimax" or "13 for Siemens";
-	              	  			sizeInt=Integer.parseInt(sizeStr);// svIDLength
+	              	  			lengthStr=element.getAttribute("size");//"11 for Vizimax" or "13 for Siemens";
+	              	  			lengthInt=Integer.parseInt(lengthStr);// svIDLength
 	              	  			System.out.println("Pos=:"+posStr);
 	              	  			//fileWriter.write(" Pos=:"+posStr+"\n");		              	  			
-	              	  			System.out.println("Size=:"+sizeStr);  	                    	  
-	              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
-	              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
+	              	  			System.out.println("length=:"+lengthStr);  	                    	  
+	              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
+	              	  			fileWriter.write(" value=:"+element.getAttribute("show")+"\n");		
 	              	  			              	  			
 	              	  			
 	              	  			globalSVIDStr=element.getAttribute("show");
@@ -2175,7 +2228,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.svID: "+"true");    
 	                                   //System.out.println("sv.svID: "+element.getAttribute("name"));       
 	                                    System.out.println("svID: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" svID: "+element.getAttribute("show")+"\n");                                       
+	                                    //fileWriter.write(" svID: "+element.getAttribute("show")+"\n");                                       
 	                                    
 	                                    fieldStatus=true;
 	                                    status=status && fieldStatus;
@@ -2183,7 +2236,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
 	                              else
 	                              {
@@ -2191,16 +2244,16 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.svID: "+"false");             
 	                                   //System.out.println("sv.svID: "+element.getAttribute("name"));      
 	                                    System.out.println("svID: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" svID: "+element.getAttribute("show")+"\n");     
+	                                    //fileWriter.write(" svID: "+element.getAttribute("show")+"\n");     
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status); 		
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
-               	  			positionInt = posInt+sizeInt+2; //2-fixed
+               	  			positionInt = posInt+lengthInt+2; //2-fixed
                	  			positionStr = Integer.toString(positionInt);
                	  			System.out.println("\nNext position=:"+positionStr);     	  
             	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                 	  			
@@ -2218,14 +2271,14 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	              	  			posStr=element.getAttribute("pos");//"46";
 	              	  			posInt=Integer.parseInt(posStr);	
 	              	  			
-	              	  			sizeStr=element.getAttribute("size");//"2";
-	              	  			sizeInt=Integer.parseInt(sizeStr);
+	              	  			lengthStr=element.getAttribute("size");//"2";
+	              	  			lengthInt=Integer.parseInt(lengthStr);
 	              	  			
 	              	  			System.out.println("Pos=:"+posStr);
 	              	  			//fileWriter.write(" Pos=:"+posStr+"\n");		              	  			
-	              	  			System.out.println("Size=:"+sizeStr);	
-	              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
-	              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
+	              	  			System.out.println("length=:"+lengthStr);	
+	              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
+	              	  			fileWriter.write(" value=:"+element.getAttribute("show")+"\n");		
 	              	  			              	  			
 	              	  		    globalSampleCounter= Integer.parseInt(element.getAttribute("value"),16);
 	              	  		    System.out.println("globalSampleCounter=:"+globalSampleCounter);
@@ -2238,7 +2291,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.smpCnt: "+"true");    
 	                                   //System.out.println("sv.smpCnt: "+element.getAttribute("name"));        
 	                                    System.out.println("smpCnt: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" smpCnt: "+element.getAttribute("show")+"\n");  
+	                                    //fileWriter.write(" smpCnt: "+element.getAttribute("show")+"\n");  
 	                                    
 	                                    //System.out.println("smpCnt=:"+Integer.parseInt(element.getAttribute("value"),16));
 	                                    //fileWriter.write(" smpCnt: "+Integer.parseInt(element.getAttribute("value"),16)+"\n");
@@ -2249,7 +2302,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);; 
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
 	                              else
 	                              {
@@ -2257,16 +2310,16 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.smpCnt: "+"false");             
 	                                   //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));      
 	                                    System.out.println("smpCnt: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" smpCnt: "+element.getAttribute("show")+"\n");    
+	                                    //fileWriter.write(" smpCnt: "+element.getAttribute("show")+"\n");    
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }          
-               	  			positionInt = posInt+sizeInt+2; //2- fixed
+               	  			positionInt = posInt+lengthInt+2; //2- fixed
                	  			positionStr = Integer.toString(positionInt);
                	  			System.out.println("\nNext position=:"+positionStr);               	  			
             	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                 	  				                    	   
@@ -2282,17 +2335,17 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	              	  			posStr=element.getAttribute("pos");//"50";
 	              	  			posInt=Integer.parseInt(posStr);	
 	              	  			
-	              	  			sizeStr=element.getAttribute("size");//"4";
-	              	  			sizeInt=Integer.parseInt(sizeStr);
+	              	  			lengthStr=element.getAttribute("size");//"4";
+	              	  			lengthInt=Integer.parseInt(lengthStr);
 	                	  		System.out.println("Pos=:"+posStr);
 	              	  			//fileWriter.write(" Pos=:"+posStr+"\n");		                	  		
-	              	  			System.out.println("Size=:"+sizeStr);  	                    	  
-	              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
-	              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
+	              	  			System.out.println("length=:"+lengthStr);  	                    	  
+	              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
+	              	  			//fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 	              	  		
 	              	  			int confRevInt=Integer.parseInt(element.getAttribute("value"),16);       
 	                	  		System.out.println("confRev=:"+confRevInt);
-	              	  			fileWriter.write(" conRev=:"+confRevInt+"\n");
+	              	  			fileWriter.write(" value of conRev=:"+confRevInt+"\n");
 	              	  			
 	                    	   		//nameOfField = "sv.confRef";
 	                              // if(element.getAttribute("name").equals("sv.confRef") && element.getAttribute("showname").startsWith("confRef:"))
@@ -2302,14 +2355,14 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.confRef: "+"true");    
 	                                   //System.out.println("sv.confRef: "+element.getAttribute("name"));        
 	                                    System.out.println("confRef: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" confRef: "+element.getAttribute("value")+"\n");    
+	                                    //fileWriter.write(" confRef: "+element.getAttribute("value")+"\n");    
 	                                    fieldStatus=true;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
 	                              else
 	                              {
@@ -2317,16 +2370,16 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.confRef: "+"false");             
 	                                   //System.out.println("sv.confRef: "+element.getAttribute("name"));      
 	                                    System.out.println("confRef: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" confRef: "+element.getAttribute("value")+"\n");    
+	                                    //fileWriter.write(" confRef: "+element.getAttribute("value")+"\n");    
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);  	
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              } 
-               	  			positionInt = posInt+sizeInt+2; //2- fixed
+               	  			positionInt = posInt+lengthInt+2; //2- fixed
                	  			positionStr = Integer.toString(positionInt);                    	  		
                	  			System.out.println("\nNext position=:"+positionStr);
             	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                 	  				                    	   
@@ -2342,12 +2395,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	              	  			posStr=element.getAttribute("pos");//"56";
 	              	  			posInt=Integer.parseInt(posStr);	
 	              	  			
-	              	  			sizeStr=element.getAttribute("size");//"1";
-	              	  			sizeInt=Integer.parseInt(sizeStr);
+	              	  			lengthStr=element.getAttribute("size");//"1";
+	              	  			lengthInt=Integer.parseInt(lengthStr);
 	              	  			System.out.println("Pos=:"+posStr);
 	              	  			//fileWriter.write(" Pos=:"+posStr+"\n");		              	  			
-	              	  			System.out.println("Size=:"+sizeStr);  	                    	  
-	              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+	              	  			System.out.println("length=:"+lengthStr);  	                    	  
+	              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 	              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 	              	  			              	  			
 	                    	   
@@ -2359,14 +2412,14 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.smpSynch: "+"true");    
 	                                   //System.out.println("sv.smpSynch: "+element.getAttribute("name"));        
 	                                    System.out.println("smpSynch: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" smpSynch: "+element.getAttribute("show")+"\n");     
+	                                    //fileWriter.write(" smpSynch: "+element.getAttribute("show")+"\n");     
 	                                    fieldStatus=true;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);;  	
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
 	                              else
 	                              {
@@ -2374,16 +2427,16 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.smpSynch: "+"false");             
 	                                   //System.out.println("sv.smpSynch: "+element.getAttribute("name"));      
 	                                    System.out.println("smpSynch: "+element.getAttribute("show"));   
-	                                    fileWriter.write(" smpSynch: "+element.getAttribute("show")+"\n");             
+	                                    //fileWriter.write(" smpSynch: "+element.getAttribute("show")+"\n");             
 	                                    fieldStatus=false;
 	                                    status=status && fieldStatus;
 	                                    System.out.println("fieldStatus=:"+fieldStatus);
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }  
-               	  			positionInt = posInt+sizeInt+2; //2-fixed
+               	  			positionInt = posInt+lengthInt+2; //2-fixed
                	  			positionStr = Integer.toString(positionInt);	                    	  		
                	  			System.out.println("\nNext position=:"+positionStr);
             	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                 	  				                    	   
@@ -2400,12 +2453,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	              	  			posStr=element.getAttribute("pos");//"59";
 	              	  			posInt=Integer.parseInt(posStr);	
 	              	  			
-	              	  			sizeStr=element.getAttribute("size");//"64";
-	              	  			sizeInt=Integer.parseInt(sizeStr);
+	              	  			lengthStr=element.getAttribute("size");//"64";
+	              	  			lengthInt=Integer.parseInt(lengthStr);
 	              	  			System.out.println("Pos=:"+posStr);
 	              	  			//fileWriter.write(" Pos=:"+posStr+"\n");		              	  			
-	              	  			System.out.println("Size=:"+sizeStr);		                    	  
-	              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+	              	  			System.out.println("length=:"+lengthStr);		                    	  
+	              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 	              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 	              	  			              	  			
 	                    	   		//nameOfField = "sv.seqData";
@@ -2416,7 +2469,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.seqData: "+"true");    
 	                                   //System.out.println("sv.seqData: "+element.getAttribute("name"));        
 	                                    System.out.println("seqData: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" seqData: "+element.getAttribute("value")+"\n");    
+	                                    //fileWriter.write(" seqData: "+element.getAttribute("value")+"\n");    
 	                                    
 	                                    getCurrentValue(element.getAttribute("value"));
 	                                    
@@ -2432,7 +2485,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	                                    
 	                                    System.out.println("status=:"+status);;  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                              }
 	                              else
 	                              {
@@ -2440,7 +2493,7 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                   System.out.println("sv.seqData: "+"false");             
 	                                   //System.out.println("sv.seqData: "+element.getAttribute("name"));      
 	                                    System.out.println("seqData: "+element.getAttribute("value"));   
-	                                    fileWriter.write(" seqData: "+element.getAttribute("value")+"\n");     
+	                                   // fileWriter.write(" seqData: "+element.getAttribute("value")+"\n");     
 	                                    
 	                                    getCurrentValue(element.getAttribute("value"));
 	                                    
@@ -2456,11 +2509,12 @@ public boolean parserAndAnalysisMultipleSVMessageFields(NodeList nList)
 	                                    //fileWriter.write("fieldStatus=:"+fieldStatus+"\n");	 
 	                                    System.out.println("status=:"+status);;  
                                         fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-                                        fileWriter.write(" status=:"+status+"\n"); 	                                    
+                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                    
 	                                    
 	                              }       
-	                               fileWriter.write("***** MU SV Single ASDU analysis Result:="+status+"\n");		                               
-                   	  			positionInt = posInt+sizeInt;
+	                               
+	                    	    fileWriter.write("***** MU SV Single ASDU analysis Result:="+status+"\n\n");		                               
+                   	  			positionInt = posInt+lengthInt;
                    	  			positionStr = Integer.toString(positionInt);		                    	  			
                    	  			System.out.println("\nNext position="+positionStr);
                    	  			
@@ -2525,8 +2579,8 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                int positionInt=0;
 	                String positionStr="";
 	                
-	                int sizeInt=0;
-	                String sizeStr="";
+	                int lengthInt=0;
+	                String lengthStr="";
 	                
 	                
 	 		for (int temp = 0; temp < nList.getLength(); temp++) {
@@ -2539,7 +2593,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                     System.out.println("No. of Filed in Header frame: "+temp);
 	                     System.out.println("Field Name=:"+element.getAttribute("name"));                           
 	                     System.out.println("showname=:"+element.getAttribute("showname"));  
-	                     System.out.println("size=:"+element.getAttribute("size"));      
+	                     System.out.println("length=:"+element.getAttribute("size"));      
 	                     System.out.println("pos=:"+element.getAttribute("pos"));  
 	                     System.out.println("show=:"+element.getAttribute("show"));      
 	                     System.out.println("value=:"+element.getAttribute("value"));                      
@@ -2567,12 +2621,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"2";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"2";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			
 			              	  			System.out.println("Pos=:"+posStr);
-			              	  			System.out.println("Size=:"+sizeStr);	
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);	
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 			              	  		    int appidDec= Integer.parseInt(element.getAttribute("value"), 16); 
@@ -2587,13 +2641,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.appid: "+"P");      
 	                                        //System.out.println("sv.appid: "+element.getAttribute("name"));     
 		                                    System.out.println("appid: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" appid: "+element.getAttribute("value")+"\n");        
+		                                    //fileWriter.write(" appid: "+element.getAttribute("value")+"\n");        
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 		                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 		                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2601,17 +2655,17 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.appid: "+"F");     
 	                                        //System.out.println("sv.appid: "+element.getAttribute("name"));         
 		                                    System.out.println("appid: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" appid: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" appid: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;	  
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 		                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 		                                        
 	                                   }          
 	                    	  			 
 	                    	  			
-	                    	  			positionInt = posInt+sizeInt;
+	                    	  			positionInt = posInt+lengthInt;
 	                    	  			positionStr = Integer.toString(positionInt);
 	                    	  			System.out.println("\nNext position=:"+positionStr);
 	                    	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                    	  			
@@ -2622,13 +2676,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"16";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"2";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"2";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);	 
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);	 
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                   // if(element.getAttribute("name").equals("sv.length") && element.getAttribute("size").equals("2") && element.getAttribute("pos").equals("16") )
@@ -2641,13 +2695,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("svLength=:"+svLength);
 		                                    System.out.println("length: "+element.getAttribute("show"));   
 		                                    
-		                                    fileWriter.write(" length: "+element.getAttribute("show")+"\n");        
+		                                    //fileWriter.write(" length: "+element.getAttribute("show")+"\n");        
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;   
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2655,15 +2709,15 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.length: "+"F");            
 	                                        //System.out.println("sv.length: "+element.getAttribute("name"));    
 		                                    System.out.println("length: "+element.getAttribute("show"));   
-		                                    fileWriter.write(" length: "+element.getAttribute("show")+"\n");    
+		                                    //fileWriter.write(" length: "+element.getAttribute("show")+"\n");    
 	                                        fieldStatus= false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }    
-	                    	  		    positionInt = posInt+sizeInt;
+	                    	  		    positionInt = posInt+lengthInt;
 	                    	  			positionStr = Integer.toString(positionInt);	   
 	                    	  			System.out.println("\nNext position=:"+positionStr);                    	  			
 	                    	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                    	  			
@@ -2674,13 +2728,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"18";
 			              	  			posInt=Integer.parseInt(posStr);
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"2";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"2";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);		                    	  
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);		                    	  
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                    // if(element.getAttribute("name").equals("sv.reserve1") && element.getAttribute("size").equals("2") && element.getAttribute("pos").equals("18") )
@@ -2690,13 +2744,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.reserve1: "+"P");          
 	                                        //System.out.println("sv.reserve1: "+element.getAttribute("name"));  
 		                                    System.out.println("reserve1: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" reserve1: "+element.getAttribute("value")+"\n");     
+		                                    //fileWriter.write(" reserve1: "+element.getAttribute("value")+"\n");     
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2704,16 +2758,16 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.reserve1: "+"F");     
 	                                        //System.out.println("sv.reserve1: "+element.getAttribute("name"));       
 		                                    System.out.println("reserve1: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" reserve1: "+element.getAttribute("value")+"\n");     
+		                                    //fileWriter.write(" reserve1: "+element.getAttribute("value")+"\n");     
 	                                        fieldStatus= false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);; 
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }         
 	                    	  			
-	                    	  			positionInt = posInt+sizeInt;
+	                    	  			positionInt = posInt+lengthInt;
 	                    	  			positionStr = Integer.toString(positionInt);
 	                    	  			System.out.println("\nNext position=:"+positionStr);                  	  			
 	                    	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                    	  			
@@ -2725,12 +2779,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"20";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"2";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"2";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                   //if(element.getAttribute("name").equals("sv.reserve2") && element.getAttribute("size").equals("2") && element.getAttribute("pos").equals("20") )
@@ -2740,13 +2794,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.reserve2: "+"P");    
 	                                        //System.out.println("sv.reserve2: "+element.getAttribute("name"));     
 		                                    System.out.println("reserve2: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" reserve2: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" reserve2: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   
 	                                   }
 	                                   else
@@ -2755,16 +2809,16 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.reserve2: "+"F");     
 	                                       // System.out.println("sv.reserve2: "+element.getAttribute("name"));     
 		                                    System.out.println("reserve2: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" vreserve2: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" vreserve2: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }  
 	                    	  			
-	                    	  			positionInt = posInt+sizeInt+2; //24
+	                    	  			positionInt = posInt+lengthInt+2; //24
 	                    	  			positionStr = Integer.toString(positionInt);			                    	  		
 	                    	  			System.out.println("\nNext position=:"+positionStr);   
 	                    	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  	                    	  			
@@ -2776,12 +2830,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"24";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"99";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"99";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);	
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);	
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                    //if(element.getAttribute("name").equals("sv.savPdu_element") && element.getAttribute("showname").equals("savPdu") && element.getAttribute("pos").equals("24") )
@@ -2792,13 +2846,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.savPdu_element: "+"P");         
 	                                        //System.out.println("sv.savPdu_element: "+element.getAttribute("name"));     
 		                                    System.out.println("savPdu_element: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" savPdu_element: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" savPdu_element: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2806,13 +2860,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.savPdu_element: "+"F");         
 	                                        //System.out.println("sv.savPdu_element: "+element.getAttribute("name"));   
 		                                    System.out.println("savPdu_element: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" savPdu_element: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" savPdu_element: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }          
 	                    	  				                    	  			
 	                    	  			positionInt = posInt+2;
@@ -2829,11 +2883,11 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"1";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"1";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 
-			              	  			System.out.println("Size=:"+sizeStr);	   
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);	   
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                    // if(element.getAttribute("name").equals("sv.noASDU") && element.getAttribute("showname").startsWith("noASDU:") && element.getAttribute("pos").equals("26") )
@@ -2844,7 +2898,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        //System.out.println("sv.noASDU: "+element.getAttribute("name"));      
 		                                    System.out.println("value: "+element.getAttribute("value"));   
 	                                        numOfASDU= Integer.parseInt(element.getAttribute("value"));
-	                                        System.out.println("noASDU=:"+numOfASDU);                    
+	                                        //System.out.println("noASDU=:"+numOfASDU);                    
 		                                    fileWriter.write(" noASDU:= "+element.getAttribute("show")+"\n");     
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
@@ -2852,7 +2906,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("status=:"+status);;  	
 
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2860,17 +2914,17 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.noASDU: "+"F");           
 	                                        //System.out.println("sv.noASDU: "+element.getAttribute("name"));      
 		                                    System.out.println("noASDU: "+element.getAttribute("show"));   
-		                                    fileWriter.write(" noASDU: "+element.getAttribute("show")+"\n");    
+		                                    //fileWriter.write(" noASDU: "+element.getAttribute("show")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	   
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	    
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	    
 	                                        
 	                                   }             
                     	  			
-	                    	  			positionInt = posInt+sizeInt+2; //29
+	                    	  			positionInt = posInt+lengthInt+2; //29
 	                    	  			positionStr = Integer.toString(positionInt);	
 	                    	  			System.out.println("\nNext position=:"+positionStr);                 	  			
 	                    	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");  
@@ -2882,12 +2936,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"29";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"94";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"94";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);		                    	  
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);		                    	  
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                    //if(element.getAttribute("name").equals("sv.seqASDU") && element.getAttribute("showname").startsWith("seqASDU:") && element.getAttribute("pos").equals("29") )
@@ -2898,13 +2952,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.seqASDU: "+"P");      
 	                                        //System.out.println("sv.seqASDU: "+element.getAttribute("name"));    
 		                                    System.out.println("seqASDU: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" seqASDU: "+element.getAttribute("value")+"\n");       
+		                                    //fileWriter.write(" seqASDU: "+element.getAttribute("value")+"\n");       
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2912,13 +2966,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.seqASDU: "+"F");    
 	                                        //System.out.println("synphasor.timeqal: "+element.getAttribute("name"));    
 		                                    System.out.println("seqASDU: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" seqASDU: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" seqASDU: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }            
 	                    	  			
 
@@ -2935,12 +2989,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"29";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"94";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"94";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);		                    	  
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);		                    	  
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 	                                   // if(element.getAttribute("name").equals("sv.ASDU_element") && element.getAttribute("showname").equals("ASDU") && element.getAttribute("pos").equals("29") )
@@ -2951,13 +3005,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.ASDU_element: "+"P");    
 	                                        //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));        
 		                                    System.out.println("ASDU_element:: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" vASDU_element:: "+element.getAttribute("value")+"\n");     
+		                                    //fileWriter.write(" vASDU_element:: "+element.getAttribute("value")+"\n");     
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);; 
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }
 	                                   else
 	                                   {
@@ -2965,13 +3019,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("sv.ASDU_element: "+"F");             
 	                                        //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));      
 		                                    System.out.println("ASDU_element:: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" ASDU_element:: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" ASDU_element:: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);; 
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 	                                   }      
          	  			
 	                    	  			positionInt = posInt+4;//29+4=33
@@ -2986,13 +3040,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"33";
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"11 for Vizimax" or "13 for Siemens";
-		              	  			sizeInt=Integer.parseInt(sizeStr);// svIDLength
+		              	  			lengthStr=element.getAttribute("size");//"11 for Vizimax" or "13 for Siemens";
+		              	  			lengthInt=Integer.parseInt(lengthStr);// svIDLength
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);  	                    	  
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
-		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
+		              	  			System.out.println("length=:"+lengthStr);  	                    	  
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
+		              	  			fileWriter.write(" value=:"+element.getAttribute("show")+"\n");		
 		              	  				              	  			
 		              	  			globalSVIDStr=element.getAttribute("show");
 		              	  			System.out.println("globalSVIDStr=:"+globalSVIDStr);
@@ -3008,14 +3062,14 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("svIDlength=:"+svIDlength);  
 	                                        
 		                                    System.out.println("svID: "+element.getAttribute("show"));   
-		                                    fileWriter.write(" svID: "+element.getAttribute("show")+"\n");
+		                                    //fileWriter.write(" svID: "+element.getAttribute("show")+"\n");
 		                                      
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }
 		                              else
 		                              {
@@ -3023,17 +3077,17 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                    System.out.println("sv.svID: "+"F");             
 		                                    //System.out.println("sv.svID: "+element.getAttribute("name"));      
 		                                    System.out.println("svID: "+element.getAttribute("show"));   
-		                                    fileWriter.write(" svID: "+element.getAttribute("show")+"\n");    
+		                                    //fileWriter.write(" svID: "+element.getAttribute("show")+"\n");    
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n");                                         
+	                                        fileWriter.write(" status=:"+status+"\n\n");                                         
 		                              }            
 
                     	  			
-                    	  			positionInt = posInt+sizeInt+2; //2-fixed
+                    	  			positionInt = posInt+lengthInt+2; //2-fixed
                     	  			positionStr = Integer.toString(positionInt);
                     	  			System.out.println("\nNext position=:"+positionStr);     	  			
                     	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                      	  			
@@ -3045,13 +3099,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"46";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"2";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"2";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);	
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);	
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 			              	  		    globalSampleCounter= Integer.parseInt(element.getAttribute("value"),16);
@@ -3065,14 +3119,14 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                    System.out.println("smpCnt "+element.getAttribute("value"));  
 		                                    fileWriter.write(" smpCnt: "+element.getAttribute("value")+"\n");
 		                                    System.out.println("smpCnt=:"+Integer.parseInt(element.getAttribute("value"),16));
-		                                    fileWriter.write(" smpCnt: "+Integer.parseInt(element.getAttribute("value"),16)+"\n");      
+		                                    //fileWriter.write(" smpCnt: "+Integer.parseInt(element.getAttribute("value"),16)+"\n");      
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  
 	                                        
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }
 		                              else
 		                              {
@@ -3080,14 +3134,14 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.smpCnt: "+"F");             
 		                                   //System.out.println("sv.ASDU_element: "+element.getAttribute("name"));      
 		                                    System.out.println("smpCnt: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" smpCnt: "+element.getAttribute("value")+"\n");      
+		                                    //fileWriter.write(" smpCnt: "+element.getAttribute("value")+"\n");      
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);
 	                                        
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 
 		                              }     
 		                               
 
@@ -3105,12 +3159,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			posStr=element.getAttribute("pos");//"50";
 			              	  			posInt=Integer.parseInt(posStr);	
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"4";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"4";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			                	  		System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				                	  		
-			              	  			System.out.println("Size=:"+sizeStr);  	                    	  
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+			              	  			System.out.println("length=:"+lengthStr);  	                    	  
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  					              	  			
 		                              // if(element.getAttribute("name").equals("sv.confRef") && element.getAttribute("showname").startsWith("confRef:"))
@@ -3120,13 +3174,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.confRef: "+"P");    
 		                                   //System.out.println("sv.confRef: "+element.getAttribute("name"));        
 		                                    System.out.println("value: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" value: "+element.getAttribute("value")+"\n");      
+		                                    //fileWriter.write(" value: "+element.getAttribute("value")+"\n");      
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }
 		                              else
 		                              {
@@ -3134,17 +3188,17 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.confRef: "+"F");             
 		                                   //System.out.println("sv.confRef: "+element.getAttribute("name"));      
 		                                    System.out.println("value: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" value: "+element.getAttribute("value")+"\n");        
+		                                    //fileWriter.write(" value: "+element.getAttribute("value")+"\n");        
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }  
  
                     	  			
-                    	  			positionInt = posInt+sizeInt+2; //2- fixed
+                    	  			positionInt = posInt+lengthInt+2; //2- fixed
                     	  			positionStr = Integer.toString(positionInt);                    	  		
                     	  			System.out.println("\nNext position=:"+positionStr);
                     	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                      	  			
@@ -3159,12 +3213,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 			              	  			smpSynchStr=element.getAttribute("value"); // 0, 1,2,5,..., 255
 			              	  			smpSynchInt=Integer.parseInt(smpSynchStr);				              	  			
 			              	  			
-			              	  			sizeStr=element.getAttribute("size");//"1";
-			              	  			sizeInt=Integer.parseInt(sizeStr);
+			              	  			lengthStr=element.getAttribute("size");//"1";
+			              	  			lengthInt=Integer.parseInt(lengthStr);
 			              	  			System.out.println("Pos=:"+posStr);
 			              	  			//fileWriter.write(" Pos=:"+posStr+"\n");				              	  			
-			              	  			System.out.println("Size=:"+sizeStr);  	   
-			              	  			fileWriter.write(" Size=:"+sizeStr+"\n");				              	  			
+			              	  			System.out.println("length=:"+lengthStr);  	   
+			              	  			fileWriter.write(" length=:"+lengthStr+"\n");				              	  			
 			              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 			              	  			                    	  
 		                              // if(element.getAttribute("name").equals("sv.smpSynch") && element.getAttribute("showname").startsWith("smpSynch:") )
@@ -3174,13 +3228,13 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.smpSynch: "+"P");    
 		                                   //System.out.println("sv.smpSynch: "+element.getAttribute("name"));        
 		                                    System.out.println(" smpSynch: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" smpSynch: "+element.getAttribute("value")+"\n");    
+		                                    //fileWriter.write(" smpSynch: "+element.getAttribute("value")+"\n");    
 	                                        fieldStatus=true;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }
 		                              else
 		                              {
@@ -3188,17 +3242,17 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.smpSynch: "+"F");             
 		                                   //System.out.println("sv.smpSynch: "+element.getAttribute("name"));      
 		                                    System.out.println("smpSynch: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" smpSynch: "+element.getAttribute("value")+"\n");            
+		                                    //fileWriter.write(" smpSynch: "+element.getAttribute("value")+"\n");            
 	                                        fieldStatus=false;
 	                                        status=status && fieldStatus;
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status);;  	
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }        
     
                     	  			
-                    	  			positionInt = posInt+sizeInt+2; //2-fixed
+                    	  			positionInt = posInt+lengthInt+2; //2-fixed
                     	  			positionStr = Integer.toString(positionInt);	                    	  		
                     	  			System.out.println("\nNext position=:"+positionStr);
                     	  			//fileWriter.write("\n Next position=:"+positionStr+"\n");                     	  			
@@ -3210,12 +3264,12 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		              	  			posStr=element.getAttribute("pos");//"59";
 		              	  			posInt=Integer.parseInt(posStr);	
 		              	  			
-		              	  			sizeStr=element.getAttribute("size");//"64";
-		              	  			sizeInt=Integer.parseInt(sizeStr);
+		              	  			lengthStr=element.getAttribute("size");//"64";
+		              	  			lengthInt=Integer.parseInt(lengthStr);
 		              	  			System.out.println("Pos=:"+posStr);
 		              	  			//fileWriter.write(" Pos=:"+posStr+"\n");			              	  			
-		              	  			System.out.println("Size=:"+sizeStr);		                    	  
-		              	  			fileWriter.write(" Size=:"+sizeStr+"\n");	
+		              	  			System.out.println("length=:"+lengthStr);		                    	  
+		              	  			fileWriter.write(" length=:"+lengthStr+"\n");	
 		              	  			fileWriter.write(" value=:"+element.getAttribute("value")+"\n");		
 		              	  				              	  			
 		                               //if(element.getAttribute("name").equals("sv.seqData") && element.getAttribute("showname").startsWith("seqData:"))
@@ -3226,7 +3280,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.seqData: "+"P");    
 		                                   //System.out.println("sv.seqData: "+element.getAttribute("name"));        
 		                                    System.out.println("sv.seqData: "+element.getAttribute("value"));   
-		                                    fileWriter.write("sv.seqData: "+element.getAttribute("value")+"\n");      
+		                                    //fileWriter.write("sv.seqData: "+element.getAttribute("value")+"\n");      
                                        
 		                                    
 		                                    getCurrentValue(element.getAttribute("value"));
@@ -3240,7 +3294,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        status=status && fieldStatus;
 	                                       		
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }
 		                              else
 		                              {
@@ -3248,7 +3302,7 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 		                                   System.out.println("sv.seqData: "+"F");             
 		                                   //System.out.println("sv.seqData: "+element.getAttribute("name"));      
 		                                    System.out.println("sv.seqData: "+element.getAttribute("value"));   
-		                                    fileWriter.write(" sv.seqData: "+element.getAttribute("value")+"\n");  
+		                                    //fileWriter.write(" sv.seqData: "+element.getAttribute("value")+"\n");  
 	                                        
 		                                    
 		                                    getCurrentValue(element.getAttribute("value"));
@@ -3264,11 +3318,11 @@ public boolean parserAndAnalysisOneSVMessageFields(NodeList nList)
 	                                        System.out.println("fieldStatus=:"+fieldStatus);;
 	                                        System.out.println("status=:"+status); 		     
 	                                        fileWriter.write(" fieldStatus=:"+fieldStatus+"\n");
-	                                        fileWriter.write(" status=:"+status+"\n"); 	                                        
+	                                        fileWriter.write(" status=:"+status+"\n\n"); 	                                        
 		                              }          
 
 	                    	  			
-	                    	  			positionInt = posInt+sizeInt;
+	                    	  			positionInt = posInt+lengthInt;
 	                    	  			positionStr = Integer.toString(positionInt);		                    	  			
 	                    	  			System.out.println("\nNext position="+positionStr);
 	                    	  			
